@@ -1,42 +1,41 @@
 package ru.ilya_noize.model;
 
-public class Account {
-    private final int id;
-    private final int userId;
-    private int money;
+import java.math.BigDecimal;
 
-    public Account(int id, int userId, int money) {
+public final class Account {
+    private final Long id;
+    private final Long userId;
+    private final BigDecimal money;
+
+    public Account(Long id, Long userId, String money) {
         this.id = id;
         this.userId = userId;
-        this.money = money;
+        this.money = new BigDecimal(money);
     }
 
-    public int getId() {
+    public Long id() {
         return id;
     }
 
-    public int getUserId() {
+    public Long userId() {
         return userId;
     }
 
-    public int getMoney() {
+    public BigDecimal money() {
         return money;
     }
 
-    public void depositingMoney(int money) {
-        this.money += money;
+    public void depositingMoney(BigDecimal amount) {
+        money.add(amount);
     }
 
-    public void debitingMoney(int money) {
-        this.money -= money;
+
+    public void withdrawMoney(BigDecimal amount) {
+        money.subtract(amount);
     }
 
     @Override
     public String toString() {
-        return "Account{" +
-                "id=" + id +
-                ", userId=" + userId +
-                ", money=" + money +
-                '}';
+        return "Account{id=%s, userId=%s, money=%s}".formatted(id, userId, money);
     }
 }
