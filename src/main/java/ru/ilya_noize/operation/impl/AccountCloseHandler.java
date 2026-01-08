@@ -1,5 +1,6 @@
 package ru.ilya_noize.operation.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.ilya_noize.model.Account;
 import ru.ilya_noize.model.User;
@@ -9,7 +10,6 @@ import ru.ilya_noize.service.AccountService;
 import ru.ilya_noize.service.UserService;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Scanner;
 
 @Component
@@ -18,6 +18,7 @@ public class AccountCloseHandler implements OperationHandler {
     private final AccountService accountService;
     private final UserService userService;
 
+    @Autowired
     public AccountCloseHandler(Scanner scanner,
                                AccountService accountService,
                                UserService userService) {
@@ -33,11 +34,11 @@ public class AccountCloseHandler implements OperationHandler {
 
     /**
      * Закрытие счёта.
-     *
+     * <p>
      * Если это единственный счёт с положительным балансом, то удаление невозможно до тех пор,
      * пока баланс счёта не будет равен нулю
      * путём снятия или совершения перевода с учётом комиссии за перевод.
-     *
+     * <p>
      * Если это не единственный счёт и на закрываемом счёте положительный баланс,
      * то сумма с удаляемого счёта переводится на первый счёт пользователя,
      * иначе просто удаляется.
@@ -46,23 +47,34 @@ public class AccountCloseHandler implements OperationHandler {
     public void perform() {
         System.out.println("Enter account ID to close:");
         Long accountId = scanner.nextLong();
-        Account account = accountService.find(accountId);
+        Account account = accountService.find(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("No such account with ID:%s%n"
+                        .formatted(accountId)));
+
         BigDecimal money = account.money();
-        User user = userService.find(account.userId());
-        List<Account> userAccounts = user.accounts();
-        if (userAccounts.size() == 1) {
-            if (userAccounts.getFirst().money().compareTo(BigDecimal.ZERO) > 0) {
-                System.out.printf("You can't close a single account with ID:" +
-                        " %s with a non-empty balance.%n", accountId);
-                return;
-            }
+        Long userId = account.userId();
+        User user = userService.find(userId)
+                .orElseThrow(() -> new IllegalArgumentException(("Data consistency is broken " +
+                        "when closing an account ID:%s for a user ID:%s%n")
+                        .formatted(accountId, userId)));
+
+        Account mainAccount = user.accounts().getFirst();
+        if (mainAccount.id().equals(accountId) && mainAccount.money().compareTo(BigDecimal.ZERO) > 0) {
+            System.out.printf("Error: account ID:%s closure rejected.%n", accountId);
+            throw new IllegalStateException("An attempt to close a single account with a positive balance.%n" +
+                    "To complete the operation successfully, " +
+                    "select the withdrawal of money or transfer of money to another account.");
         }
+
         if (money.compareTo(BigDecimal.ZERO) > 0) {
-            userAccounts.getFirst().depositingMoney(money);
+            account.withdrawMoney(money);
+            mainAccount.depositMoney(money);
         }
-        System.out.printf("Account with ID %s has been closed.", accountId);
+
+        user.accounts().remove(account);
+        user.accounts().addFirst(mainAccount);
+        userService.save(user);
         accountService.remove(account);
-        userAccounts.remove(account);
-        userService.removeAccount();
+        System.out.printf("Account with ID %s has been closed.", accountId);
     }
 }

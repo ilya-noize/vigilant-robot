@@ -1,5 +1,6 @@
 package ru.ilya_noize.operation.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.ilya_noize.model.User;
 import ru.ilya_noize.operation.OperationHandler;
@@ -13,7 +14,11 @@ public class UserCreateHandler implements OperationHandler {
     private final Scanner scanner;
     private final UserService userService;
 
-    public UserCreateHandler(Scanner scanner, UserService userService) {
+    @Autowired
+    public UserCreateHandler(
+            Scanner scanner,
+            UserService userService
+    ) {
         this.scanner = scanner;
         this.userService = userService;
     }

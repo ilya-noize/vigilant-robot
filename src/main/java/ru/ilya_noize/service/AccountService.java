@@ -4,17 +4,18 @@ import ru.ilya_noize.model.Account;
 import ru.ilya_noize.model.User;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 public interface AccountService {
-    Account find(Long accountId);
-
     Account create(User user);
 
-    boolean deposit(Account account, BigDecimal deposit);
+    Account save(Account deposited);
 
-    boolean transfer(Account sourceAccount, Account targetAccount, BigDecimal transfer);
+    Optional<Account> find(Long accountId);
 
-    boolean withdraw(Account account, BigDecimal withdraw);
+    Account deposit(Account account, BigDecimal deposit);
+
+    Account withdraw(Account account, BigDecimal withdraw);
 
     void remove(Account account);
 }

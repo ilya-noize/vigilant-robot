@@ -1,13 +1,12 @@
 package ru.ilya_noize.config;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.*;
 
 import java.util.Scanner;
 
 @Configuration
-@PropertySource("classpath://application.yaml")
+@ComponentScan("ru.ilya_noize")
+@PropertySource("classpath:/application.properties")
 public class ApplicationConfiguration {
 
     @Bean

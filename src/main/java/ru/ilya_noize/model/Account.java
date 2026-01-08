@@ -2,7 +2,7 @@ package ru.ilya_noize.model;
 
 import java.math.BigDecimal;
 
-public final class Account {
+public class Account {
     private final Long id;
     private final Long userId;
     private final BigDecimal money;
@@ -25,13 +25,31 @@ public final class Account {
         return money;
     }
 
-    public void depositingMoney(BigDecimal amount) {
+    public void depositMoney(BigDecimal amount) {
         money.add(amount);
     }
 
-
-    public void withdrawMoney(BigDecimal amount) {
+    public Account withdrawMoney(BigDecimal amount) {
+        if(money.compareTo(amount) <= 0) {
+            throw new IllegalArgumentException("The withdrawal amount:%s is more ".formatted(amount) +
+                    "than the amount in the account%n");
+        }
         money.subtract(amount);
+        return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Account account)) return false;
+
+        return id.equals(account.id) && userId.equals(account.userId);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id.hashCode();
+        result = 31 * result + userId.hashCode();
+        return result;
     }
 
     @Override

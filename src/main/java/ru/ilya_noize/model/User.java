@@ -2,7 +2,7 @@ package ru.ilya_noize.model;
 
 import java.util.List;
 
-public final class User {
+public class User {
     private final Long id;
     private final String login;
     private final List<Account> accounts;
