@@ -18,17 +18,12 @@ public class ListenerStarter {
 
     @PostConstruct
     public void init() {
-        this.listener = new Thread(() -> {
-            consoleListener.construct();
-            consoleListener.update();
-        });
+        this.listener = new Thread(consoleListener::update);
         this.listener.start();
     }
 
     @PreDestroy
     public void destroy() {
         listener.interrupt();
-        consoleListener.destroy();
-        Application.close();
     }
 }
