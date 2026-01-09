@@ -11,7 +11,6 @@ import ru.ilya_noize.service.AccountService;
 import ru.ilya_noize.service.UserService;
 
 import java.math.BigDecimal;
-import java.util.Scanner;
 
 @Component
 public class AccountDepositHandler implements OperationHandler {
@@ -56,7 +55,7 @@ public class AccountDepositHandler implements OperationHandler {
         int accountIndex = user.accounts().indexOf(account);
         Account updated = accountService.deposit(account, deposit);
         user.accounts().set(accountIndex, updated);
-        User userSaved = userService.save(user);
+        userService.save(user);
 
         return "Amount %s updated to account ID: %s"
                 .formatted(deposit, accountId);

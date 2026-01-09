@@ -64,7 +64,7 @@ public class UserServiceImpl implements UserService {
             throw new ApplicationException("No accounts for user ID:%s".formatted(userId));
         }
         user.removeAccount(account);
-        return user;// save(user);
+        return user;
     }
 
 

@@ -21,8 +21,13 @@ public class User {
         return accounts;
     }
 
-    public boolean addAccount(Account account) {
-        return accounts.add(account);
+    public void addAccount(Account account) {
+        if (accounts.contains(account)) {
+            int index = accounts.indexOf(account);
+            accounts.set(index, account);
+        } else {
+            accounts.add(account);
+        }
     }
 
     public void removeAccount(Account account) {
