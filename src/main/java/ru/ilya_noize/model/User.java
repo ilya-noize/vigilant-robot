@@ -2,39 +2,49 @@ package ru.ilya_noize.model;
 
 import java.util.List;
 
-public final class User {
-    private final Long id;
+public class User {
+    private final int id;
     private final String login;
     private final List<Account> accounts;
 
-    public User(Long id, String login, List<Account> accounts) {
+    public User(int id, String login, List<Account> accounts) {
         this.id = id;
         this.login = login;
         this.accounts = accounts;
     }
 
-    public Long id() {
+    public int id() {
         return id;
-    }
-
-    public String login() {
-        return login;
     }
 
     public List<Account> accounts() {
         return accounts;
     }
 
+    public void addAccount(Account account) {
+        if (accounts.contains(account)) {
+            int index = accounts.indexOf(account);
+            accounts.set(index, account);
+        } else {
+            accounts.add(account);
+        }
+    }
+
+    public void removeAccount(Account account) {
+        int index = accounts.indexOf(account);
+        accounts.remove(index);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof User user)) return false;
 
-        return id.equals(user.id) && login.equals(user.login) && accounts.equals(user.accounts);
+        return id == user.id && login.equals(user.login) && accounts.equals(user.accounts);
     }
 
     @Override
     public int hashCode() {
-        int result = id.hashCode();
+        int result = id;
         result = 31 * result + login.hashCode();
         return result;
     }

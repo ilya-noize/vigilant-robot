@@ -1,20 +1,13 @@
 package ru.ilya_noize.service;
 
 import ru.ilya_noize.model.Account;
-import ru.ilya_noize.model.User;
 
 import java.math.BigDecimal;
 
-public interface AccountService {
-    Account find(Long accountId);
+public interface AccountService extends CrudService<Account> {
+    Account create(int userId);
 
-    Account create(User user);
+    Account deposit(Account account, BigDecimal deposit);
 
-    boolean deposit(Account account, BigDecimal deposit);
-
-    boolean transfer(Account sourceAccount, Account targetAccount, BigDecimal transfer);
-
-    boolean withdraw(Account account, BigDecimal withdraw);
-
-    void remove(Account account);
+    Account withdraw(Account account, BigDecimal withdraw);
 }

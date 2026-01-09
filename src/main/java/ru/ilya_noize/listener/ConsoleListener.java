@@ -1,23 +1,29 @@
 package ru.ilya_noize.listener;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.ilya_noize.exception.ApplicationException;
 import ru.ilya_noize.operation.OperationHandler;
 import ru.ilya_noize.operation.OperationType;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Component
 public class ConsoleListener {
-    private final Scanner scanner;
+    private final IOHandler ioHandler;
     private final Map<OperationType, OperationHandler> handlers;
 
-    public ConsoleListener(Scanner scanner,
-                           List<OperationHandler> operations) {
-        this.scanner = scanner;
+    @Autowired
+    public ConsoleListener(
+            IOHandler ioHandler,
+            List<OperationHandler> operations
+    ) {
+        this.ioHandler = ioHandler;
         this.handlers = operations.stream()
                 .collect(Collectors.toMap(
                         OperationHandler::getType,
@@ -25,47 +31,52 @@ public class ConsoleListener {
                 ));
     }
 
+    @PostConstruct
+    public void construct() {
+        System.out.println("┌───────────────────────────");
+        System.out.println("│  ✅ Initialize listener.");
+    }
+
+    @PreDestroy
+    public void destroy() {
+        System.out.println("│  ✅ Shutdown listener.");
+        System.out.println("└───────────────────────────");
+    }
+
     public void update() {
-        System.out.println("Please enter one of operation type:");
         do {
-            for (OperationType type : OperationType.values()) {
-                System.out.println(type);
-            }
-            Optional<OperationType> operationType = getOperationType();
-            if (operationType.isEmpty()) {
-                return;
-            }
-            operationHandler(operationType.get());
+            mainMenu();
+            mainHandler();
         } while (!Thread.currentThread().isInterrupted());
     }
 
-    public void construct() {
-        System.out.println("Initialize listener.");
-    }
-
-    public void destroy() {
-        System.out.println("Shutdown listener.");
-    }
-
-    private Optional<OperationType> getOperationType() {
-        while (!Thread.currentThread().isInterrupted()) {
-            String input = scanner.nextLine();
-            try {
-                return Optional.of(OperationType.valueOf(input));
-            } catch (IllegalArgumentException e) {
-                System.out.println("No such command found");
-            }
+    private void mainMenu() {
+        System.out.println("├───────────────────────────┐");
+        System.out.println("│         MAIN_MENU         │");
+        System.out.println("├───────────────────────────┘");
+        for (OperationType type : OperationType.values()) {
+            System.out.println("├─ " + type);
         }
-        return Optional.empty();
     }
 
-    private void operationHandler(OperationType operationType) {
+    private void mainHandler() {
         try {
-            handlers.get(operationType).perform();
-        } catch (Exception e) {
-            System.out.printf("Operation: %s is fail: %s.%n",
-                    operationType,
-                    e.getMessage());
+            commandProcessing();
+        } catch (NumberFormatException ignored) {
+            System.out.println("│  ❌ Must be numeric symbols.");
+        } catch (ApplicationException |
+                 IllegalArgumentException |
+                 IllegalStateException |
+                 NoSuchElementException e) {
+            System.out.printf("│  ❌ %s%n", e.getMessage());
+        } catch (Throwable e) {
+            System.out.printf("│  ❌ Command fail: %s.%n", e.getMessage());
         }
+    }
+
+    private void commandProcessing() {
+        String input = ioHandler.getString("Please enter one of operation type");
+        OperationType operationType = OperationType.valueOf(input.toUpperCase());
+        System.out.printf("│  ✅ %s%n", handlers.get(operationType).perform());
     }
 }

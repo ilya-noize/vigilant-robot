@@ -1,18 +1,21 @@
 package ru.ilya_noize.service;
 
+import ru.ilya_noize.model.Account;
 import ru.ilya_noize.model.User;
 
-import java.util.List;
+import java.util.Collection;
 
-public interface UserService {
+public interface UserService extends CrudService<User> {
     User create(String login);
 
-    List<User> getAll();
+    User addAccount(Account account);
 
-    User find(Long userId);
+    User removeAccount(Account account);
 
-    List<User> findByIds(List<Long> ids);
+    Collection<User> getAll();
 
-    void removeAccount();
+    boolean notExists(int userId);
+
+    boolean usersIsEmpty();
 }
 

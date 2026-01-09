@@ -1,25 +1,32 @@
 package ru.ilya_noize.operation.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.ilya_noize.listener.IOHandler;
 import ru.ilya_noize.model.Account;
+import ru.ilya_noize.model.User;
 import ru.ilya_noize.operation.OperationHandler;
 import ru.ilya_noize.operation.OperationType;
 import ru.ilya_noize.service.AccountService;
+import ru.ilya_noize.service.UserService;
 
 import java.math.BigDecimal;
-import java.util.Scanner;
 
 @Component
 public class AccountDepositHandler implements OperationHandler {
-    private final Scanner scanner;
+    private final IOHandler ioHandler;
     private final AccountService accountService;
+    private final UserService userService;
 
+    @Autowired
     public AccountDepositHandler(
-            Scanner scanner,
-            AccountService accountService
+            IOHandler ioHandler,
+            AccountService accountService,
+            UserService userService
     ) {
-        this.scanner = scanner;
+        this.ioHandler = ioHandler;
         this.accountService = accountService;
+        this.userService = userService;
     }
 
     @Override
@@ -28,22 +35,29 @@ public class AccountDepositHandler implements OperationHandler {
     }
 
     @Override
-    public void perform() {
-        System.out.println("Enter account ID:");
-        Long accountId = scanner.nextLong();
-        Account account = accountService.find(accountId);
+    public String perform() {
+        int accountId = ioHandler.getInteger("Enter account ID");
+        Account account = accountService.find(accountId)
+                .orElseThrow(()->new IllegalArgumentException("No such account ID:%s%n"
+                        .formatted(accountId)));
 
-        System.out.println("Enter amount to deposit:");
-        String amount = scanner.nextLine();
+        String amount = ioHandler.getString("Enter amount to deposit");
         BigDecimal deposit = new BigDecimal(amount);
         if(deposit.compareTo(BigDecimal.ZERO) <= 0) {
-            System.out.printf("FAIL! Amount %s must be positive%n",amount);
+            throw new IllegalArgumentException("FAIL! Amount %s must be positive\n".formatted(amount));
         }
 
-        boolean isOk = accountService.deposit(account, deposit);
-        String message = isOk ?
-                "Amount %s deposited to account ID: %s" :
-                "FAIL! Amount %s can't depositing to account ID: %s";
-        System.out.printf(message, deposit, accountId);
+        int userId = account.userId();
+        User user = userService.find(userId)
+                .orElseThrow(() -> new IllegalArgumentException(("Data consistency is broken " +
+                        "when deposit an account ID:%s for a user ID:%s%n")
+                        .formatted(accountId, userId)));
+        int accountIndex = user.accounts().indexOf(account);
+        Account updated = accountService.deposit(account, deposit);
+        user.accounts().set(accountIndex, updated);
+        userService.save(user);
+
+        return "Amount %s updated to account ID: %s"
+                .formatted(deposit, accountId);
     }
 }
