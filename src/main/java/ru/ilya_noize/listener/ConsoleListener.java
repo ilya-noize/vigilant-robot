@@ -63,7 +63,7 @@ public class ConsoleListener {
         try {
             commandProcessing();
         } catch (NumberFormatException ignored) {
-            System.out.printf("│  ❌ Must be numeric symbols.");
+            System.out.println("│  ❌ Must be numeric symbols.");
         } catch (ApplicationException |
                  IllegalArgumentException |
                  IllegalStateException |

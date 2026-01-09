@@ -4,5 +4,5 @@ public interface OperationHandler {
 
     OperationType getType();
 
-    void perform();
+    String perform();
 }

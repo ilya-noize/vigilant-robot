@@ -13,7 +13,8 @@ public class ExitHandler implements OperationHandler {
     }
 
     @Override
-    public void perform() {
+    public String perform() {
         Application.close();
+        return "Application close";
     }
 }
