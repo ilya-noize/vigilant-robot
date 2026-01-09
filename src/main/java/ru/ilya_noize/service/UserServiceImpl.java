@@ -1,54 +1,72 @@
 package ru.ilya_noize.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import ru.ilya_noize.exception.ApplicationException;
 import ru.ilya_noize.model.Account;
 import ru.ilya_noize.model.User;
 
-import java.math.BigDecimal;
 import java.util.*;
 
 @Component
 public class UserServiceImpl implements UserService {
-    private Long counterId = 0L;
-    private final BigDecimal amount;
-    private final AccountService accountService;
+    private int counterId = 1;
     private final Set<String> logins = new HashSet<>();
-    private final Map<Long, User> users = new HashMap<>();
+    private final Map<Integer, User> users = new HashMap<>();
 
-    @Autowired
-    public UserServiceImpl(
-            AccountService accountService,
-            @Value(value = "${account.amount}") String amount
-    ) {
-        this.amount = new BigDecimal(amount);
-        this.accountService = accountService;
+    public UserServiceImpl() {
+        String login = "admin";
+        logins.add(login);
+        User admin = new User(counterId++, login, new ArrayList<>());
+        Account serviceAccount = new Account(1, admin.id(), "0");
+        admin.addAccount(serviceAccount);
+        users.put(admin.id(), admin);
     }
 
     @Override
     public User create(String login) {
         if (!logins.add(login)) {
-            throw new IllegalArgumentException("Rejected command:" +
-                    " Login:%s must be unique.".formatted(login));
+            throw new ApplicationException("Rejected: login %s is used. Try another login"
+                    .formatted(login));
         }
-        Long id = ++counterId;
-        User user = new User(id, login, new ArrayList<>());
-        Account account = accountService.create(user);
-        account.depositMoney(amount);
-        accountService.save(account);
-        user.accounts().add(account);
-        System.out.println("account = " + account);
-        System.out.println("user = " + user);
-        return this.save(user);
+        int userId = counterId++;
+        User user = new User(userId, login, new ArrayList<>());
+        return save(user);
     }
 
     @Override
     public User save(User user) {
-        User put = users.put(user.id(), user);
-        System.out.printf("%s saved.%n", put);
-        return put;
+        users.put(user.id(), user);
+        return user;
     }
+
+    @Override
+    public User addAccount(Account account) {
+        User user = users.get(account.userId());
+        if (user.accounts().contains(account)) {
+            int index = user.accounts().indexOf(account);
+            user.accounts().set(index, account);
+        } else {
+            user.accounts().add(account);
+        }
+        return save(user);
+    }
+
+    @Override
+    public User removeAccount(Account account) {
+        int userId = account.userId();
+        if (notExists(userId)) {
+            throw new ApplicationException("No such user ID:%s".formatted(userId));
+        }
+        User user = users.get(userId);
+        List<Account> accounts = user.accounts();
+
+        if (accounts.isEmpty()) {
+            throw new ApplicationException("No accounts for user ID:%s".formatted(userId));
+        }
+        user.removeAccount(account);
+        return user;// save(user);
+    }
+
 
     @Override
     public Collection<User> getAll() {
@@ -56,10 +74,34 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> find(Long userId) {
-        if (!users.containsKey(userId)) {
+    public Optional<User> find(int userId) {
+        if (notExists(userId)) {
             return Optional.empty();
         }
         return Optional.of(users.get(userId));
+    }
+
+    @Override
+    public void remove(int id) {
+        if (notExists(id)) {
+            throw new ApplicationException("No such user ID: %s".formatted(id));
+        }
+        if (id == 1) {
+            throw new ApplicationException("Remove user rejected: it's administrator");
+        }
+        if (!users.get(id).accounts().isEmpty()) {
+            throw new ApplicationException("Remove user rejected: user has accounts");
+        }
+        users.remove(id);
+    }
+
+    @Override
+    public boolean notExists(int userId) {
+        return !users.containsKey(userId);
+    }
+
+    @Override
+    public boolean usersIsEmpty() {
+        return users.isEmpty();
     }
 }
