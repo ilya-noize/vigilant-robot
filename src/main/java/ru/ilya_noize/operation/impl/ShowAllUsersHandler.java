@@ -24,15 +24,20 @@ public class ShowAllUsersHandler implements OperationHandler {
     @Override
     public String perform() {
         Collection<User> users = userService.getAll();
+        Integer size = showAllUsers(users);
+        if (size == null) return "List empty";
+        return "%s user%s".formatted(size, size > 1 ? "s" : "");
+    }
+
+    public Integer showAllUsers(Collection<User> users) {
         if (users.isEmpty()) {
-            return "List empty";
+            return null;
         }
         System.out.println("┌───────────────────────────");
         users.forEach(user ->
                 System.out.printf("│ %s%n", user)
         );
         System.out.println("└───────────────────────────");
-        int size = users.size();
-        return "%s user%s".formatted(size, size > 1 ? "s" : "");
+        return users.size();
     }
 }

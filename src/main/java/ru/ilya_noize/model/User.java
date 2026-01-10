@@ -1,13 +1,14 @@
 package ru.ilya_noize.model;
 
-import java.util.List;
+import java.util.Set;
 
 public class User {
+    public static final int ADMIN_ID = 1;
     private final int id;
     private final String login;
-    private final List<Account> accounts;
+    private final Set<Account> accounts;
 
-    public User(int id, String login, List<Account> accounts) {
+    public User(int id, String login, Set<Account> accounts) {
         this.id = id;
         this.login = login;
         this.accounts = accounts;
@@ -17,22 +18,21 @@ public class User {
         return id;
     }
 
-    public List<Account> accounts() {
-        return accounts;
-    }
-
     public void addAccount(Account account) {
-        if (accounts.contains(account)) {
-            int index = accounts.indexOf(account);
-            accounts.set(index, account);
-        } else {
-            accounts.add(account);
-        }
+        accounts.add(account);
     }
 
-    public void removeAccount(Account account) {
-        int index = accounts.indexOf(account);
-        accounts.remove(index);
+    public void updateAccount(Account account){
+        accounts.remove(account);
+        accounts.add(account);
+    }
+
+    public boolean removeAccount(Account account) {
+        return accounts.remove(account);
+    }
+
+    public boolean haveAccounts() {
+        return !accounts.isEmpty();
     }
 
     @Override
@@ -51,11 +51,9 @@ public class User {
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer("User{");
-        sb.append("id=").append(id);
-        sb.append(", login='").append(login).append('\'');
-        sb.append(", accounts=").append(accounts);
-        sb.append('}');
-        return sb.toString();
+        return "User {" + "id=" + id +
+                ", login='" + login + '\'' +
+                ", accounts=" + accounts +
+                '}';
     }
 }

@@ -35,26 +35,22 @@ public class AccountWithdrawHandler implements OperationHandler {
     @Override
     public String perform() {
         int accountId = ioHandler.getInteger("Enter account ID to withdraw from");
-        Account account = accountService.find(accountId)
-                .orElseThrow(() -> new IllegalArgumentException("No such account ID:%s"
-                        .formatted(accountId)
-                ));
-
         String amount = ioHandler.getString("Enter amount to withdraw");
-        BigDecimal withdraw = new BigDecimal(amount);
-        accountService.save(account);
-        int userId = account.userId();
-        User user = userService.find(userId)
-                .orElseThrow(() -> new IllegalStateException("Data consistency is broken " +
-                        "when closing an account ID:%s for a user ID:%s"
-                                .formatted(accountId, userId)
-                ));
-        int indexOfAccount = user.accounts().indexOf(account);
-        accountService.save(account.withdrawMoney(withdraw));
-        user.accounts().set(indexOfAccount, account);
-        userService.save(user);
+        AccountWithdraw(accountId, amount);
 
         return "Amount %s deposited to account ID: %s"
-                .formatted(withdraw, accountId);
+                .formatted(amount, accountId);
+    }
+
+    public void AccountWithdraw(int accountId, String amount) {
+        Account account = accountService.get(accountId);
+        User user = userService.get(account.userId());
+
+        BigDecimal money = new BigDecimal(amount);
+        if(money.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("FAIL! Amount %s must be positive\n".formatted(amount));
+        }
+        account.withdrawMoney(money);
+        user.updateAccount(account);
     }
 }
