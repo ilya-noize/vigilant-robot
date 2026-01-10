@@ -1,5 +1,7 @@
 package ru.ilya_noize.model;
 
+import ru.ilya_noize.exception.ApplicationException;
+
 import java.util.Set;
 
 public class User {
@@ -28,6 +30,9 @@ public class User {
     }
 
     public boolean removeAccount(Account account) {
+        if (account.id() == Account.ADMIN_ID) {
+            throw new ApplicationException("You can't remove account for administrator");
+        }
         return accounts.remove(account);
     }
 
