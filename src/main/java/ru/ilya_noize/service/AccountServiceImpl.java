@@ -3,6 +3,7 @@ package ru.ilya_noize.service;
 import org.springframework.stereotype.Component;
 import ru.ilya_noize.exception.ApplicationException;
 import ru.ilya_noize.model.Account;
+import ru.ilya_noize.model.User;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -11,25 +12,22 @@ import java.util.Optional;
 
 @Component
 public class AccountServiceImpl implements AccountService {
-    private int counterId = 1;
+    private int counterId = Account.ADMIN_ID;
     private final Map<Integer, Account> accounts = new HashMap<>();
 
     public AccountServiceImpl() {
-        Account serviceAccount = new Account(counterId++, 1, "0");
-        accounts.put(serviceAccount.id(), serviceAccount);
     }
 
     @Override
-    public Account create(int userId) {
+    public Account create(Object param) {
+        int userId = (int) param;
+        if (userId == User.ADMIN_ID && accounts.containsKey(Account.ADMIN_ID)) {
+            throw new ApplicationException("You can't create account for administrator");
+        }
         int id = counterId++;
-        Account account = new Account(id, userId, "0");
+        Account account = new Account(id, userId, "0.00");
         accounts.put(id, account);
         return account;
-    }
-
-    @Override
-    public Account save(Account account) {
-        return accounts.put(account.id(), account);
     }
 
     @Override
@@ -40,47 +38,21 @@ public class AccountServiceImpl implements AccountService {
         return Optional.of(accounts.get(accountId));
     }
 
-    /**
-     * @param account Счёт пользователя
-     * @param deposit Сумма зачисления
-     * @return Сохранённый счёт
-     * @throws ApplicationException Отрицательная сумма зачисления
-     */
     @Override
-    public Account deposit(Account account, BigDecimal deposit) {
-        if (deposit.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new ApplicationException("Amount %s reject depositing from account ID:%s"
-                    .formatted(deposit, account.id()));
+    public boolean remove(int id) {
+        if (id == Account.ADMIN_ID) {
+            throw new ApplicationException("You can't remove account for administrator");
         }
-        account.depositMoney(deposit);
-        return save(account);
-    }
-
-    /**
-     * @param account  Счёт пользователя
-     * @param withdraw Сумма списания
-     * @return Сохранённый счёт
-     * @throws ApplicationException Не достаточно средств
-     */
-    @Override
-    public Account withdraw(Account account, BigDecimal withdraw) {
-        if (withdraw.compareTo(account.money()) > 0) {
-            throw new ApplicationException((("There are not enough funds to withdraw from" +
-                    " the account ID:%s").formatted(account.id())));
+        Account account = get(id);
+        if (account.money().compareTo(BigDecimal.ZERO) > 0) {
+            throw new ApplicationException("Account ID: %s not empty".formatted(id));
         }
-        account.withdrawMoney(withdraw);
-        return save(account);
+        accounts.remove(id);
+        return true;
     }
 
     @Override
-    public void remove(int id) {
-        if (accounts.containsKey(id)) {
-            if(accounts.get(id).money().compareTo(BigDecimal.ZERO) != 0) {
-                throw new ApplicationException("Account ID: %s not empty".formatted(id));
-            }
-            accounts.remove(id);
-        } else {
-            throw new ApplicationException("No such account ID: %s".formatted(id));
-        }
+    public String getEntitySimpleClassName() {
+        return Account.class.getSimpleName();
     }
 }

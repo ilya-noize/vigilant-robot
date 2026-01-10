@@ -42,13 +42,16 @@ public class UserCreateHandler implements OperationHandler {
     @Override
     public String perform() {
         String login = ioHandler.getString("Enter login for new user");
-        int userId = userService.create(login).id();
+        User user = createUser(login);
 
-        Account account = accountService.create(userId);
-        Account deposited = accountService.deposit(account, BigDecimal.valueOf(amount));
+        return "User created ID: %s".formatted(user);
+    }
 
-        User user = userService.addAccount(deposited);
-
-        return "User created: %s".formatted(user);
+    public User createUser(String login) {
+        User user = userService.create(login);
+        Account account = accountService.create(user.id());
+        account.depositMoney(BigDecimal.valueOf(amount));
+        user.addAccount(account);
+        return user;
     }
 }

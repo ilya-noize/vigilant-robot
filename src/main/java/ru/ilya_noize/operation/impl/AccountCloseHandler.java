@@ -35,35 +35,42 @@ public class AccountCloseHandler implements OperationHandler {
         return OperationType.ACCOUNT_CLOSE;
     }
 
+
     /**
      * Закрытие счёта.
      * <p>
-     * Если этот счёт с положительным балансом, то удаление невозможно до тех пор,
-     * пока баланс счёта не будет равен нулю
-     * путём снятия или совершения перевода с учётом комиссии за перевод.
-     * @return Сообщение для {@code ConsoleListener.update()}
+     * Если этот счёт с положительным балансом,
+     * то удаление невозможно.
+     * @return String для {@code ConsoleListener.update()}
      */
     @Override
     public String perform() {
         int accountId = ioHandler.getInteger("Enter account ID to close");
-        Account account = accountService.find(accountId)
-                .orElseThrow(() -> new IllegalArgumentException("No such account with ID:%s%n"
-                        .formatted(accountId)));
 
-        if (account.money().compareTo(BigDecimal.ZERO) == 0) {
-            throw new ApplicationException("Account ID: %s not empty".formatted(accountId));
+        if(!closeAccount(accountId)){
+            throw new ApplicationException("Reject close account");
         }
 
-        int userId = account.userId();
-        User user = userService.find(userId)
-                .orElseThrow(() -> new IllegalStateException(("Data consistency is broken " +
-                        "when closing an account ID:%s for a user ID:%s%n")
-                        .formatted(accountId, userId)
-                ));
-
-        accountService.remove(accountId);
-        user.removeAccount(account);
-
         return "Account with ID %s has been closed.".formatted(accountId);
+    }
+
+    /**
+     * Закрытие счёта.
+     * <p>
+     * Если этот счёт с положительным балансом,
+     * то удаление невозможно до тех пор,
+     * пока баланс счёта не будет равен нулю
+     * путём снятия или совершения перевода с учётом комиссии за перевод.
+     * @return boolean результат по закрытию счёта
+     */
+    public boolean closeAccount(int accountId) {
+        Account account = accountService.get(accountId);
+        if (account.money().compareTo(BigDecimal.ZERO) > 0) {
+            throw new ApplicationException("Account ID: %s have money"
+                    .formatted(accountId));
+        }
+        User user = userService.get(account.userId());
+        return user.removeAccount(account)
+                && accountService.remove(accountId);
     }
 }
