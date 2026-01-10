@@ -64,6 +64,9 @@ public class AccountCloseHandler implements OperationHandler {
      * @return boolean результат по закрытию счёта
      */
     public boolean closeAccount(int accountId) {
+        if (accountId == Account.ADMIN_ID) {
+            throw new ApplicationException("You can't remove account for administrator");
+        }
         Account account = accountService.get(accountId);
         if (account.money().compareTo(BigDecimal.ZERO) > 0) {
             throw new ApplicationException("Account ID: %s have money"
