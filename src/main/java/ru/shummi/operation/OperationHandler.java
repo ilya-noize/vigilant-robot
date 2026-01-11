@@ -1,4 +1,4 @@
-package ru.ilya_noize.operation;
+package ru.shummi.operation;
 
 public interface OperationHandler {
 

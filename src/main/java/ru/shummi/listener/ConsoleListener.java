@@ -1,12 +1,12 @@
-package ru.ilya_noize.listener;
+package ru.shummi.listener;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.ilya_noize.exception.ApplicationException;
-import ru.ilya_noize.operation.OperationHandler;
-import ru.ilya_noize.operation.OperationType;
+import ru.shummi.exception.ApplicationException;
+import ru.shummi.operation.OperationHandler;
+import ru.shummi.operation.OperationType;
 
 import java.util.List;
 import java.util.Map;
@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 public class ConsoleListener {
     private final IOHandler ioHandler;
     private final Map<OperationType, OperationHandler> handlers;
+    private final int width = 28;
 
     @Autowired
     public ConsoleListener(
@@ -33,14 +34,14 @@ public class ConsoleListener {
 
     @PostConstruct
     public void construct() {
-        System.out.println("┌───────────────────────────");
+        System.out.println("┌" + "─".repeat(width - 1));
         System.out.println("│  ✅ Initialize listener.");
     }
 
     @PreDestroy
     public void destroy() {
         System.out.println("│  ✅ Shutdown listener.");
-        System.out.println("└───────────────────────────");
+        System.out.println("└" + "─".repeat(width - 1));
     }
 
     public void update() {
@@ -51,12 +52,13 @@ public class ConsoleListener {
     }
 
     private void mainMenu() {
-        System.out.println("├───────────────────────────┐");
-        System.out.println("│         MAIN_MENU         │");
-        System.out.println("├───────────────────────────┘");
+        System.out.println("├" + "─".repeat(width - 2) + "┐");
+        System.out.println("│        MAIN MENU         │");
         for (OperationType type : OperationType.values()) {
-            System.out.println("├─ " + type);
+            // "├─ %-Ns│%n" -> N = width - 5
+            System.out.printf("├─ %-24s│%n", type);
         }
+        System.out.println("├" + "─".repeat(width - 2) + "┘");
     }
 
     private void mainHandler() {

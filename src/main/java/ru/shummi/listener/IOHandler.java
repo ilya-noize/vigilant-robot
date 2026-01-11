@@ -1,6 +1,5 @@
-package ru.ilya_noize.listener;
+package ru.shummi.listener;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Scanner;
@@ -9,9 +8,8 @@ import java.util.Scanner;
 public class IOHandler {
     private final Scanner scanner;
 
-    @Autowired
-    public IOHandler(Scanner scanner) {
-        this.scanner = scanner;
+    public IOHandler() {
+        this.scanner = new Scanner(System.in);
     }
 
     public String getString(String message) {

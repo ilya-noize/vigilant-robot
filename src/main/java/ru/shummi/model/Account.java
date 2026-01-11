@@ -1,6 +1,6 @@
-package ru.ilya_noize.model;
+package ru.shummi.model;
 
-import ru.ilya_noize.exception.ApplicationException;
+import ru.shummi.exception.ApplicationException;
 
 import java.math.BigDecimal;
 
@@ -10,10 +10,10 @@ public class Account {
     private final int userId;
     private BigDecimal money;
 
-    public Account(int id, int userId, String money) {
+    public Account(int id, int userId, BigDecimal money) {
         this.id = id;
         this.userId = userId;
-        this.money = new BigDecimal(money);
+        this.money = money;
     }
 
     public int id() {
@@ -50,7 +50,7 @@ public class Account {
     public boolean equals(Object o) {
         if (!(o instanceof Account account)) return false;
 
-        return id == account.id && userId == account.userId;
+        return id == account.id;
     }
 
     @Override
