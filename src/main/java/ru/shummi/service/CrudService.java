@@ -1,10 +1,10 @@
-package ru.ilya_noize.service;
+package ru.shummi.service;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 public interface CrudService<T> {
-    T create(Object param);
+    T save(T entity);
 
     Optional<T> find(int id);
 
@@ -15,7 +15,7 @@ public interface CrudService<T> {
         ));
     }
 
-    boolean remove(int id);
+    void remove(int id);
 
     String getEntitySimpleClassName();
 }

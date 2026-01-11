@@ -1,12 +1,17 @@
-package ru.ilya_noize.service;
+package ru.shummi.service;
 
 import org.springframework.stereotype.Component;
-import ru.ilya_noize.exception.ApplicationException;
-import ru.ilya_noize.model.User;
+import ru.shummi.exception.ApplicationException;
+import ru.shummi.model.User;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
-import static ru.ilya_noize.model.User.ADMIN_ID;
+import static ru.shummi.model.User.ADMIN_ID;
 
 @Component
 public class UserServiceImpl implements UserService {
@@ -18,16 +23,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User create(Object param) {
-        String login = (String) param;
+    public User create(String login) {
         if (!logins.add(login)) {
             throw new ApplicationException("Rejected: login %s is used. Try another login"
                     .formatted(login));
         }
         int userId = counterId++;
         User user = new User(userId, login, new HashSet<>());
-        users.put(user.id(), user);
-        return user;
+        return save(user);
     }
 
     @Override
@@ -36,15 +39,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> find(int id) {
-        if (notExists(id)) {
-            return Optional.empty();
-        }
-        return Optional.of(users.get(id));
+    public User save(User entity) {
+        users.put(entity.id(), entity);
+        return entity;
     }
 
     @Override
-    public boolean remove(int id) {
+    public Optional<User> find(int id) {
+        return Optional.ofNullable(users.get(id));
+    }
+
+    @Override
+    public void remove(int id) {
         if (id == ADMIN_ID) {
             throw new ApplicationException(("Remove user ID: %s ".formatted(id) +
                     "rejected: it's administrator"));
@@ -55,17 +61,11 @@ public class UserServiceImpl implements UserService {
                     "rejected: user have accounts"));
         }
         users.remove(id);
-        return true;
     }
 
     @Override
     public String getEntitySimpleClassName() {
         return User.class.getSimpleName();
-    }
-
-    @Override
-    public boolean notExists(int id) {
-        return !users.containsKey(id);
     }
 
     @Override

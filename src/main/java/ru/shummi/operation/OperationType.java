@@ -1,4 +1,4 @@
-package ru.ilya_noize.operation;
+package ru.shummi.operation;
 
 public enum OperationType {
     USER_CREATE,
@@ -7,6 +7,5 @@ public enum OperationType {
     ACCOUNT_CLOSE,
     ACCOUNT_DEPOSIT,
     ACCOUNT_TRANSFER,
-    ACCOUNT_WITHDRAW,
-    EXIT
+    ACCOUNT_WITHDRAW
 }

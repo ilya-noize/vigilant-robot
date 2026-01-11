@@ -1,4 +1,4 @@
-package ru.ilya_noize.listener;
+package ru.shummi.listener;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;

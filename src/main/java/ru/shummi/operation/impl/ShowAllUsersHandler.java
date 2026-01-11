@@ -1,10 +1,11 @@
-package ru.ilya_noize.operation.impl;
+package ru.shummi.operation.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.ilya_noize.model.User;
-import ru.ilya_noize.operation.OperationHandler;
-import ru.ilya_noize.operation.OperationType;
-import ru.ilya_noize.service.UserService;
+import ru.shummi.model.User;
+import ru.shummi.operation.OperationHandler;
+import ru.shummi.operation.OperationType;
+import ru.shummi.service.UserService;
 
 import java.util.Collection;
 
@@ -12,6 +13,7 @@ import java.util.Collection;
 public class ShowAllUsersHandler implements OperationHandler {
     private final UserService userService;
 
+    @Autowired
     public ShowAllUsersHandler(UserService userService) {
         this.userService = userService;
     }
@@ -23,13 +25,13 @@ public class ShowAllUsersHandler implements OperationHandler {
 
     @Override
     public String perform() {
-        Collection<User> users = userService.getAll();
-        Integer size = showAllUsers(users);
+        Integer size = showAllUsers();
         if (size == null) return "List empty";
         return "%s user%s".formatted(size, size > 1 ? "s" : "");
     }
 
-    public Integer showAllUsers(Collection<User> users) {
+    public Integer showAllUsers() {
+        Collection<User> users = userService.getAll();
         if (users.isEmpty()) {
             return null;
         }

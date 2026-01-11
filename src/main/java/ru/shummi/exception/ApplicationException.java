@@ -1,4 +1,4 @@
-package ru.ilya_noize.exception;
+package ru.shummi.exception;
 
 public class ApplicationException extends RuntimeException {
     public ApplicationException(String message) {
