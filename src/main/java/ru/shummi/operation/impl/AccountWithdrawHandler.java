@@ -33,7 +33,7 @@ public class AccountWithdrawHandler implements OperationHandler {
         int accountId = ioHandler.getInteger("Enter account ID to withdraw from");
         String amount = ioHandler.getString("Enter amount to withdraw");
         BigDecimal money = new BigDecimal(amount);
-        userAccountService.withdrawAccount(accountId, money);
+        userAccountService.withdrawAccountById(accountId, money);
 
         return "Amount %s deposited to account ID: %s"
                 .formatted(amount, accountId);
