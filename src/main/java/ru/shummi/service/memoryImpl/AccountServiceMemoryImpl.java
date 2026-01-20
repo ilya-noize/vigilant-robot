@@ -1,9 +1,10 @@
-package ru.shummi.service;
+package ru.shummi.service.memoryImpl;
 
 import org.springframework.stereotype.Component;
 import ru.shummi.exception.ApplicationException;
 import ru.shummi.model.Account;
 import ru.shummi.model.User;
+import ru.shummi.service.AccountService;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -11,11 +12,11 @@ import java.util.Map;
 import java.util.Optional;
 
 @Component
-public class AccountServiceImpl implements AccountService {
+public class AccountServiceMemoryImpl implements AccountService {
     private int counterId = Account.ADMIN_ID;
     private final Map<Integer, Account> accounts = new HashMap<>();
 
-    public AccountServiceImpl() {
+    public AccountServiceMemoryImpl() {
     }
 
     @Override

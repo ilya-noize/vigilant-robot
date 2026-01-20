@@ -1,8 +1,9 @@
-package ru.shummi.service;
+package ru.shummi.service.memoryImpl;
 
 import org.springframework.stereotype.Component;
 import ru.shummi.exception.ApplicationException;
 import ru.shummi.model.User;
+import ru.shummi.service.UserService;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -14,12 +15,12 @@ import java.util.Set;
 import static ru.shummi.model.User.ADMIN_ID;
 
 @Component
-public class UserServiceImpl implements UserService {
+public class UserServiceMemoryImpl implements UserService {
     private int counterId = ADMIN_ID;
     private final Set<String> logins = new HashSet<>();
     private final Map<Integer, User> users = new HashMap<>();
 
-    public UserServiceImpl() {
+    public UserServiceMemoryImpl() {
     }
 
     @Override

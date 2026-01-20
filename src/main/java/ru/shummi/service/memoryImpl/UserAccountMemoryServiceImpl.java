@@ -1,4 +1,4 @@
-package ru.shummi.service;
+package ru.shummi.service.memoryImpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -6,6 +6,9 @@ import org.springframework.stereotype.Component;
 import ru.shummi.exception.ApplicationException;
 import ru.shummi.model.Account;
 import ru.shummi.model.User;
+import ru.shummi.service.AccountService;
+import ru.shummi.service.UserAccountService;
+import ru.shummi.service.UserService;
 
 import java.math.BigDecimal;
 
