@@ -8,7 +8,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import ru.shummi.exception.ApplicationException;
 
 import java.math.BigDecimal;
 import java.util.StringJoiner;
@@ -69,9 +68,6 @@ public class Account /*extends BaseEntity*/ {
     }
 
     public void withdrawMoney(BigDecimal amount) {
-        if (id().equals(ADMIN_ID)) {
-            throw new ApplicationException("Withdrawal from the administrator's account is denied");
-        }
         if (money.compareTo(amount) < 0) {
             throw new IllegalArgumentException("The withdrawal amount %s is more ".formatted(amount) +
                     "than the amount in the account");
@@ -93,7 +89,6 @@ public class Account /*extends BaseEntity*/ {
     public String toString() {
         return new StringJoiner(", ", Account.class.getSimpleName() + "[", "]")
                 .add("id=" + id())
-                .add("user=" + user())
                 .add("money=" + money())
                 .toString();
     }
