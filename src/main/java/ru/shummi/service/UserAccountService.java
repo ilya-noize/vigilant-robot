@@ -1,23 +1,24 @@
 package ru.shummi.service;
 
-import ru.shummi.model.User;
+import ru.shummi.entity.Account;
+import ru.shummi.entity.User;
 
 import java.math.BigDecimal;
 
 public interface UserAccountService {
     User registrationUser(String login);
 
-    int addAccountToUserById(int userId);
+    Account addAccountToUserById(Long userId);
 
-    void closeAccountById(int accountId);
+    void closeAccountById(Long accountId);
 
-    void withdrawAccountById(int accountId, BigDecimal withdraw);
+    void withdrawAccountById(Long accountId, BigDecimal withdraw);
 
-    void depositAccountById(int accountId, BigDecimal deposit);
+    void depositAccountById(Long accountId, BigDecimal deposit);
 
     void transferAccountFromIdToId(
-            int sourceAccountId,
-            int targetAccountId,
+            Long sourceAccountId,
+            Long targetAccountId,
             BigDecimal transfer
     );
 }
