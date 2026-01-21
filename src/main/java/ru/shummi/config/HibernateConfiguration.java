@@ -3,11 +3,10 @@ package ru.shummi.config;
 import org.hibernate.SessionFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import ru.shummi.model.Account;
-import ru.shummi.model.User;
+import ru.shummi.entity.Account;
+import ru.shummi.entity.User;
 
 @Configuration
-
 public class HibernateConfiguration {
 
     @Bean
@@ -22,7 +21,8 @@ public class HibernateConfiguration {
                 .setProperty("hibernate.connection.user", "postgres")
                 .setProperty("hibernate.connection.password", "root")
                 .setProperty("hibernate.show_sql", "true")
-                .setProperty("hibernate.hdm2dll.auto", "create/drop");
+                .setProperty("hibernate.hdm2dll.auto", "create-drop")
+                .setProperty("hibernate.current_session_context_class", "thread");
 
         return configuration.buildSessionFactory();
     }
