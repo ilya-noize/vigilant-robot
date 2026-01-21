@@ -2,11 +2,13 @@ package ru.shummi.service;
 
 import ru.shummi.entity.User;
 
-import java.util.Collection;
+import java.util.List;
 
 public interface UserService {
+    boolean isUniqueLogin(String login);
+
     User create(String login);
 
-    Collection<User> getAll();
+    List<User> getAll();
 }
 

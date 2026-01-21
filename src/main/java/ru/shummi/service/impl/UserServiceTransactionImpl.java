@@ -8,7 +8,7 @@ import ru.shummi.entity.User;
 import ru.shummi.service.TransactionExecutorService;
 import ru.shummi.service.UserService;
 
-import java.util.Collection;
+import java.util.List;
 
 @Service
 public class UserServiceTransactionImpl implements UserService {
@@ -39,10 +39,12 @@ public class UserServiceTransactionImpl implements UserService {
     }
 
     @Override
-    public Collection<User> getAll() {
-        return transactionExecutorService.executeInTransaction(() -> {
-            Session session = sessionFactory.getCurrentSession();
-            return session.createQuery("SELECT u FROM User u", User.class)
+    public List<User> getAll() {
+        return transactionExecutorService.executeInTransaction(session -> {
+            String jpql = """
+                    SELECT u FROM User u LEFT JOIN FETCH u.accounts
+                    """;
+            return session.createQuery(jpql, User.class)
                     .getResultList();
         });
     }
