@@ -7,7 +7,7 @@ import ru.shummi.operation.OperationHandler;
 import ru.shummi.operation.OperationType;
 import ru.shummi.service.UserService;
 
-import java.util.Collection;
+import java.util.List;
 
 @Component
 public class ShowAllUsersHandler implements OperationHandler {
@@ -25,21 +25,15 @@ public class ShowAllUsersHandler implements OperationHandler {
 
     @Override
     public String perform() {
-        Integer size = showAllUsers();
-        if (size == null) return "List empty";
-        return "%s user%s".formatted(size, size > 1 ? "s" : "");
-    }
-
-    public Integer showAllUsers() {
-        Collection<User> users = userService.getAll();
-        if (users.isEmpty()) {
-            return null;
-        }
+        List<User> users = userService.getAll();
         System.out.println("┌───────────────────────────");
         users.forEach(user ->
                 System.out.printf("│ %s%n", user)
         );
         System.out.println("└───────────────────────────");
-        return users.size();
+        if (users.isEmpty()) return "List empty";
+
+        int size = users.size();
+        return "%s user%s".formatted(size, size > 1 ? "s" : "");
     }
 }
