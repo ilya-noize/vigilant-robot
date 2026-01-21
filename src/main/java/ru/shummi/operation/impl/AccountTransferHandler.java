@@ -33,11 +33,11 @@ public class AccountTransferHandler implements OperationHandler {
 
     @Override
     public String perform() {
-        int sourceAccountId = ioHandler.getInteger("Enter source account ID");
-        int targetAccountId = ioHandler.getInteger("Enter target account ID");
+        long sourceAccountId = ioHandler.getLong("Enter source account ID");
+        long targetAccountId = ioHandler.getLong("Enter target account ID");
         String amount = ioHandler.getString("Enter amount to transfer");
         BigDecimal transfer = new BigDecimal(amount);
-        userAccountService.transferAccount(sourceAccountId, targetAccountId, transfer);
+        userAccountService.transferAccountFromIdToId(sourceAccountId, targetAccountId, transfer);
 
         return "Amount %s transferred from account ID: %s to account ID: %s"
                 .formatted(amount, sourceAccountId, targetAccountId);

@@ -28,7 +28,7 @@ public class AccountCloseHandler implements OperationHandler {
 
     @Override
     public String perform() {
-        int accountId = ioHandler.getInteger("Enter account ID to close");
+        long accountId = ioHandler.getLong("Enter account ID to close");
         userAccountService.closeAccountById(accountId);
 
         return "Account with ID %s has been closed.".formatted(accountId);
