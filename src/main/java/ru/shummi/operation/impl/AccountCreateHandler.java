@@ -28,8 +28,8 @@ public class AccountCreateHandler implements OperationHandler {
 
     @Override
     public String perform() {
-        int userId = ioHandler.getInteger("Enter the user id for which to create an account");
-        int accountId = userAccountService.addAccountToUserById(userId);
+        long userId = ioHandler.getLong("Enter the user id for which to create an account");
+        long accountId = userAccountService.addAccountToUserById(userId).id();
 
         return "New account created with ID: %s for user ID: %s"
                 .formatted(accountId, userId);

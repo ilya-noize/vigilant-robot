@@ -3,7 +3,7 @@ package ru.shummi.operation.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.shummi.listener.IOHandler;
-import ru.shummi.model.User;
+import ru.shummi.entity.User;
 import ru.shummi.operation.OperationHandler;
 import ru.shummi.operation.OperationType;
 import ru.shummi.service.UserAccountService;

@@ -32,4 +32,13 @@ public class IOHandler {
             throw new NumberFormatException();
         }
     }
+
+    public long getLong(String message) {
+        String string = getString(message);
+        try {
+            return Long.parseLong(string);
+        } catch (NumberFormatException e) {
+            throw new NumberFormatException();
+        }
+    }
 }
