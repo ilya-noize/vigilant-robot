@@ -1,7 +1,6 @@
 package ru.shummi.service.impl;
 
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.shummi.entity.Account;
@@ -15,24 +14,27 @@ import ru.shummi.service.UserService;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.stream.Collectors;
 
 import static java.math.BigDecimal.ZERO;
 
 @Service
 public class UserAccountServiceImpl implements UserAccountService {
-    private final SessionFactory sessionFactory;
-    private final TransactionExecutorService<Object> transactionExecutorService;
+    private final TransactionExecutorService transactionExecutorService;
     private final UserService userService;
     private final AccountService accountService;
     private final BigDecimal commission;
     private final BigDecimal amount;
+    private final Long adminId;
+    private final Long adminAccountId;
+    private final String selectUserAccountResourcesByAccountId = """
+            SELECT u, a
+             FROM User u
+             JOIN u.accounts a
+             WHERE a.id = :accountId
+            """;
 
     public UserAccountServiceImpl(
-            SessionFactory sessionFactory,
-            TransactionExecutorService<Object> transactionExecutorService,
+            TransactionExecutorService transactionExecutorService,
             UserService userService,
             AccountService accountService,
             @Value("${account.commission}")
@@ -40,23 +42,50 @@ public class UserAccountServiceImpl implements UserAccountService {
             @Value("${account.amount}")
             String amount
     ) {
-        this.sessionFactory = sessionFactory;
         this.transactionExecutorService = transactionExecutorService;
         this.userService = userService;
         this.accountService = accountService;
         this.commission = new BigDecimal(commission.isBlank() ? "0.00" : commission);
         this.amount = new BigDecimal(amount.isBlank() ? "0.00" : amount);
+
+        long[] adminResourcesIds = findAdminResourcesIds();
+        this.adminId = adminResourcesIds[0];
+        this.adminAccountId = adminResourcesIds[1];
+    }
+
+    private long[] findAdminResourcesIds() {
+        return this.transactionExecutorService.executeInTransaction(session -> {
+            try {
+                String selectAdminResources = "SELECT u, a FROM User u JOIN u.accounts a " +
+                        "WHERE u.login = :login OR u.role = :role";
+                List<Object[]> resources = session.createQuery(selectAdminResources, Object[].class)
+                        .setParameter("login", "admin")
+                        .setParameter("role", UserRole.ADMIN_ROLE)
+                        .getResultList();
+                long[] result = new long[2];
+                for (Object[] row : resources) {
+                    User admin = (User) row[0];
+                    result[0] = admin.id();
+                    Account adminAccount = (Account) row[1];
+                    result[1] = adminAccount.id();
+                }
+                return result;
+            } catch (Exception ignored) {
+                User admin = new User("admin");
+                admin.setRole(UserRole.ADMIN_ROLE.name());
+                session.persist(admin);
+                Account adminAccount = new Account(admin, ZERO);
+                session.persist(adminAccount);
+                return new long[]{admin.id(), adminAccount.id()};
+            }
+        });
     }
 
     public User registrationUser(String login) {
         final String finalLogin = login.trim().toLowerCase();
-        return transactionExecutorService.executeInTransaction(() -> {
-            Session session = sessionFactory.getCurrentSession();
+        return transactionExecutorService.executeInTransaction((session) -> {
             User user = userService.create(finalLogin);
-
             Account account = accountService.create(new Account(user, amount));
-            session.detach(user);
-
             user.accounts().add(account);
             session.merge(user);
 
@@ -65,8 +94,8 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     public Account addAccountToUserById(Long userId) {
-        return transactionExecutorService.executeInTransaction(() -> {
-            Session session = sessionFactory.getCurrentSession();
+        isNotSystemResources(userId);
+        return transactionExecutorService.executeInTransaction((session) -> {
             User user = session.find(User.class, userId);
             return accountService.create(new Account(user, new BigDecimal("0.00")));
         });
@@ -86,11 +115,25 @@ public class UserAccountServiceImpl implements UserAccountService {
      * @throws java.util.NoSuchElementException если пользователь не найден
      */
     public void closeAccountById(Long accountId) {
-        transactionExecutorService.executeInTransaction(() -> {
-            Session session = sessionFactory.getCurrentSession();
-            Account account = session.find(Account.class, accountId);
+        isNotSystemResources(accountId);
+        transactionExecutorService.executeInTransaction((session) -> {
+            // select account and user
+            AccountResources accountResources = findAccountResources(accountId, session);
+            // select user's accounts
+            List<Account> accounts = accountResources.allAccountByUser();
+            Account account = accountResources.account();
+            BigDecimal money = account.money();
+            if (!money.equals(ZERO)) {
+                Account firstAccount = accounts.stream()
+                        .filter(acc -> !acc.id().equals(accountId))
+                        .findFirst().orElseThrow(() -> new ApplicationException(
+                                "Actions with this single account are denied (AccountId:%s)"
+                                        .formatted(accountId)));
+                // update account money
+                transferBetweenAccountsOwner(account, firstAccount, money, session);
+            }
+            // delete account
             session.remove(account);
-            return account;
         });
     }
 
@@ -104,10 +147,9 @@ public class UserAccountServiceImpl implements UserAccountService {
      * @throws java.util.NoSuchElementException если пользователь не найден
      */
     public void withdrawAccountById(Long accountId, BigDecimal withdraw) {
-        verifyAmount(withdraw);
+        isPositiveAmount(withdraw);
         transactionExecutorService.executeInTransaction((session) -> {
             Account account = session.find(Account.class, accountId);
-            session.detach(account);
             account.withdrawMoney(withdraw);
             session.merge(account);
         });
@@ -123,10 +165,10 @@ public class UserAccountServiceImpl implements UserAccountService {
      * @throws java.util.NoSuchElementException если пользователь не найден
      */
     public void depositAccountById(Long accountId, BigDecimal deposit) {
-        verifyAmount(deposit);
+        isPositiveAmount(deposit);
+        isNotSystemResources(accountId);
         transactionExecutorService.executeInTransaction((session) -> {
             Account account = session.find(Account.class, accountId);
-            session.detach(account);
             account.depositMoney(deposit);
             session.merge(account);
         });
@@ -147,65 +189,129 @@ public class UserAccountServiceImpl implements UserAccountService {
             Long targetAccountId,
             BigDecimal transfer
     ) {
-        List<Long> ids = List.of(sourceAccountId, targetAccountId);
-        verifyAmount(transfer);
+        isPositiveAmount(transfer);
+        isNotSystemResources(sourceAccountId);
         transactionExecutorService.executeInTransaction((session) -> {
-            String selectAccounts = """
-                    SELECT a FROM Account a
-                    WHERE a.id IN :ids
-                        OR EXISTS (
-                            SELECT 1 FROM a.user u WHERE u.role = :role
-                        )
-                    """;
-            Map<Long, Account> accounts = session
-                    .createQuery(selectAccounts, Account.class)
-                    .setParameter("id", ids)
-                    .setParameter("role", UserRole.ADMIN_ROLE)
-                    .getResultList()
-                    .stream()
-                    .collect(Collectors.toMap(Account::id, (a) -> a));
 
-            RelatedAccounts rA = getRelatedAccounts(accounts, ids);
-
-            session.detach(rA.sourceAccount());
-            session.detach(rA.targetAccount());
-            session.detach(rA.adminAccount());
-
-            BigDecimal commissionFee = getCommissionFee(transfer, rA.sourceAccount(), rA.targetAccount());
-            rA.sourceAccount().withdrawMoney(transfer.add(commissionFee));
-            rA.targetAccount().depositMoney(transfer);
-            rA.adminAccount().depositMoney(commissionFee);
-
-            session.merge(rA.sourceAccount());
-            session.merge(rA.targetAccount());
-            session.merge(rA.adminAccount());
+            // select admin account
+            Account adminAccount = session.find(Account.class, adminAccountId);
+            Account targetAccount;
+            Long targetUserId;
+            // if transfer to admin then target* equals admin*
+            if (targetAccountId.equals(adminAccountId)) {
+                targetAccount = adminAccount;
+                targetUserId = adminId;
+            } else {
+                // select account + user (target)
+                AccountResources targetResources = findAccountResources(targetAccountId, session);
+                targetAccount = targetResources.account;
+                targetUserId = targetResources.user.id();
+            }
+            //select account + user (source)
+            AccountResources sourceResources = findAccountResources(sourceAccountId, session);
+            Long sourceUserId = sourceResources.user.id();
+            Account sourceAccount = sourceResources.account;
+            if (!sourceUserId.equals(targetUserId)) {
+                transferBetweenAccountWithCommission(sourceAccount, targetAccount, adminAccount, transfer, session);
+            } else {
+                transferBetweenAccountsOwner(sourceAccount, targetAccount, transfer, session);
+            }
         });
     }
 
-    private BigDecimal getCommissionFee(BigDecimal transfer, Account sourceAccount, Account targetAccount) {
-        Long sourceUserId = sourceAccount.user().id();
-        Long targetUserId = targetAccount.user().id();
-        boolean equals = sourceUserId.equals(targetUserId);
-        return (equals ? ZERO : commission).multiply(transfer);
+    private AccountResources findAccountResources(Long accountId, Session session) {
+        List<Object[]> sourceResources = session
+                .createQuery(selectUserAccountResourcesByAccountId, Object[].class)
+                .setParameter("accountId", accountId)
+                .getResultList();
+        User sourceUser = null;
+        Account sourceAccount = null;
+        for (Object[] row : sourceResources) {
+            sourceUser = (User) row[0];
+            sourceAccount = (Account) row[1];
+        }
+        return new AccountResources(sourceAccount, sourceUser);
     }
 
-    private RelatedAccounts getRelatedAccounts(Map<Long, Account> accounts, List<Long> ids) {
-        Account sourceAccount = accounts.get(ids.getFirst());
-        Account targetAccount = accounts.get(ids.getLast());
-        Long adminAccountId = accounts.keySet().stream()
-                .filter(key -> !ids.contains(key))
-                .findFirst()
-                .orElseThrow(() -> new NoSuchElementException("No such admin account"));
-        Account adminAccount = accounts.get(adminAccountId);
-        accounts.clear();
-        return new RelatedAccounts(sourceAccount, targetAccount, adminAccount);
+    private record AccountResources(Account account, User user) {
+        public List<Account> allAccountByUser() {
+            return user.accounts();
+        }
     }
 
-    private record RelatedAccounts(Account sourceAccount, Account targetAccount, Account adminAccount) {
+    private void transferBetweenAccountWithCommission(
+            Account sourceAccount,
+            Account targetAccount,
+            Account adminAccount,
+            BigDecimal transfer,
+            Session session
+    ) {
+        BigDecimal commissionFee = commission.multiply(transfer);
+        assert sourceAccount != null;
+        sourceAccount.withdrawMoney(transfer.add(commissionFee));
+        assert targetAccount != null;
+        targetAccount.depositMoney(transfer);
+        adminAccount.depositMoney(commissionFee);
 
+        // update accounts
+        Long sourceAccountId = sourceAccount.id();
+        Long targetAccountId = targetAccount.id();
+        Long adminAccountId = adminAccount.id();
+        List<Long> ids = List.of(sourceAccountId, targetAccountId, adminAccountId);
+        session.createNativeQuery("""
+                        UPDATE accounts SET money = CASE
+                          WHEN id = :sourceAccountId THEN :amountWithCommission
+                          WHEN id = :targetAccountId THEN :amount
+                          WHEN id = :adminAccountId THEN :commission
+                        END
+                        WHERE id IN (:ids);
+                        """)
+                .setParameter("sourceAccountId", ids.getFirst())
+                .setParameter("amountWithCommission", sourceAccount.money())
+                .setParameter("targetAccountId", ids.get(2))
+                .setParameter("amount", targetAccount.money())
+                .setParameter("adminAccountId", ids.getLast())
+                .setParameter("commission", adminAccount.money())
+                .setParameter("ids", ids)
+                .executeUpdate();
     }
 
-    private void verifyAmount(BigDecimal money) {
+    private void transferBetweenAccountsOwner(
+            Account sourceAccount,
+            Account targetAccount,
+            BigDecimal transfer,
+            Session session
+    ) {
+        isPositiveAmount(transfer);
+        sourceAccount.withdrawMoney(transfer);
+        targetAccount.depositMoney(transfer);/*
+
+        System.out.println("ACCOUNT_TRANSFER_OWNER -> UPDATE");
+        // update accounts
+        Long sourceAccountId = sourceAccount.id();
+        Long targetAccountId = targetAccount.id();
+        session.createNativeQuery("""
+                        UPDATE accounts SET money = CASE
+                          WHEN id = :sourceAccountId THEN :withdraw
+                          WHEN id = :targetAccountId THEN :deposit
+                        END
+                        WHERE id IN (:ids);
+                        """)
+                .setParameter("sourceAccountId", sourceAccountId)
+                .setParameter("withdraw", sourceAccount.money())
+                .setParameter("targetAccountId", targetAccountId)
+                .setParameter("deposit", targetAccount.money())
+                .setParameter("ids", List.of(sourceAccountId, targetAccountId))
+                .executeUpdate();*/
+    }
+
+    private void isNotSystemResources(Long id) {
+        if (id.equals(adminId))
+            throw new ApplicationException("Actions with this resource are denied (AccountId:%s)"
+                    .formatted(id));
+    }
+
+    private void isPositiveAmount(BigDecimal money) {
         if (money.compareTo(ZERO) <= 0) {
             throw new ApplicationException("Amount must be positive");
         }

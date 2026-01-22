@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import ru.shummi.exception.ApplicationException;
 
 import java.math.BigDecimal;
 import java.util.StringJoiner;
@@ -64,15 +65,17 @@ public class Account /*extends BaseEntity*/ {
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Amount:%s must be positive or zero");
         }
-        money = money.add(amount);
+        setMoney(money.add(amount));
     }
 
     public void withdrawMoney(BigDecimal amount) {
         if (money.compareTo(amount) < 0) {
-            throw new IllegalArgumentException("The withdrawal amount %s is more ".formatted(amount) +
-                    "than the amount in the account");
+            throw new ApplicationException(
+                    "Insufficient funds: cannot withdraw %s (account balance: %s)"
+                            .formatted(amount, money)
+            );
         }
-        money = money.subtract(amount);
+        setMoney(money.subtract(amount));
     }
 
     @Override

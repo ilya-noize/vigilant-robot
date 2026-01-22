@@ -1,6 +1,7 @@
 package ru.shummi.listener;
 
 import org.springframework.stereotype.Component;
+import ru.shummi.exception.ApplicationException;
 
 import java.util.Scanner;
 
@@ -18,7 +19,7 @@ public class IOHandler {
             System.out.printf("│ %s: %n├\uD83E\uDC02 ", message);
             input = scanner.nextLine();
             if (input.equalsIgnoreCase("escape")) {
-                throw new IllegalArgumentException("Enter canceled.");
+                throw new ApplicationException("enter canceled.");
             }
         }
         return input;
