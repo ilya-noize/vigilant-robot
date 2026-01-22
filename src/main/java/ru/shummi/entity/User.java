@@ -14,9 +14,10 @@ import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 @Entity
-@Table(name = "users")
+@Table(name = "usr")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -72,46 +73,13 @@ public class User {
         return accounts;
     }
 
-    public void setAccounts(List<Account> accounts) {
-        this.accounts = accounts;
-    }
-
     public UserRole role() {
         return role;
     }
 
-    @Deprecated(forRemoval = true)
     public void setRole(String role) {
         this.role = UserRole.valueOf(role);
     }
-
-//    public Account getFirstAccountNotEqualsId(int id) {
-//        return accounts.stream()
-//                .filter(account -> account.id() != id)
-//                .findFirst()
-//                .orElseThrow(() -> new NoSuchElementException(
-//                        "Can't find first account by user ID:%s".formatted(id())
-//                ));
-//    }
-
-//    /**
-//     * Закрытие счёта
-//     *
-//     * @param account Closeable account
-//     * @throws ApplicationException You can't close account for administrator
-//     * @throws ApplicationException There is money in the account
-//     * @throws ApplicationException You can't close single account
-//     */
-//    public void removeAccount(ru.shummi.model.Account account) {
-//        if (account.id() == Account.ADMIN_ID) {
-//            throw new ApplicationException("You can't close account for administrator");
-//        }
-//        if (isSingleAccount()) {
-//            throw new ApplicationException("You can't close single " +
-//                    "account for user ID:%s".formatted(id()));
-//        }
-//        accounts.remove(account);
-//    }
 
     @Override
     public boolean equals(Object o) {
@@ -129,9 +97,11 @@ public class User {
 
     @Override
     public String toString() {
-        return "User {" + "id=" + id() +
-                ", login='" + login() + '\'' +
-                ", accounts=" + accounts() +
-                '}';
+        return new StringJoiner(", ", User.class.getSimpleName() + "[", "]")
+                .add("id=" + id)
+                .add("login='" + login + "'")
+                .add("role=" + role)
+                .add("accounts=" + accounts)
+                .toString();
     }
 }

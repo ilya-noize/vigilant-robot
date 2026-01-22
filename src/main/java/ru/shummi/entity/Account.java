@@ -65,18 +65,17 @@ public class Account /*extends BaseEntity*/ {
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Amount:%s must be positive or zero");
         }
-        money = money.add(amount);
+        setMoney(money.add(amount));
     }
 
     public void withdrawMoney(BigDecimal amount) {
-        if (id().equals(ADMIN_ID)) {
-            throw new ApplicationException("Withdrawal from the administrator's account is denied");
-        }
         if (money.compareTo(amount) < 0) {
-            throw new IllegalArgumentException("The withdrawal amount %s is more ".formatted(amount) +
-                    "than the amount in the account");
+            throw new ApplicationException(
+                    "Insufficient funds: cannot withdraw %s (account balance: %s)"
+                            .formatted(amount, money)
+            );
         }
-        money = money.subtract(amount);
+        setMoney(money.subtract(amount));
     }
 
     @Override
@@ -93,7 +92,6 @@ public class Account /*extends BaseEntity*/ {
     public String toString() {
         return new StringJoiner(", ", Account.class.getSimpleName() + "[", "]")
                 .add("id=" + id())
-                .add("user=" + user())
                 .add("money=" + money())
                 .toString();
     }

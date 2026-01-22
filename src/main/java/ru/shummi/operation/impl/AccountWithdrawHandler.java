@@ -35,7 +35,7 @@ public class AccountWithdrawHandler implements OperationHandler {
         BigDecimal money = new BigDecimal(amount);
         userAccountService.withdrawAccountById(accountId, money);
 
-        return "Amount %s deposited to account ID: %s"
+        return "Amount of %s has been withdrawn from the account ID: %s"
                 .formatted(amount, accountId);
     }
 }

@@ -7,26 +7,38 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 @Service
-public class TransactionExecutorService<T> {
+public class TransactionExecutorService {
     private final SessionFactory sessionFactory;
 
     public TransactionExecutorService(SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
     }
 
-    public <T> T executeInTransaction(Supplier<T> action) {
+    /**
+     * Получаем текущую сессию.
+     * Получаем транзакцию из сессии.
+     * --
+     * Если транзакция в статусе АКТИВНЫЙ, то выполняем команды в сессии (get|find) и выводим результат -> конец.
+     * --
+     * В другом случае начинаем транзакцию, получаем результат выполнения действия и делаем коммит транзакции
+     * В случае ошибки делаем откат изменений и выбрасываем исключение
+     * В конце закрываем сессию.
+     * --
+     * Итог: сессия активна всегда для получения данных, но закрывается если делаем транзакцию в ней.
+     */
+    public <T> T executeInTransaction(Function<Session, T> action) {
         Session session = sessionFactory.getCurrentSession();
         Transaction transaction = session.getTransaction();
 
         if (!transaction.getStatus().equals(TransactionStatus.NOT_ACTIVE)) {
-            return action.get();
+            return action.apply(session);
         }
         try {
             session.beginTransaction();
-            T value = action.get();
+            T value = action.apply(session);
             transaction.commit();
             return value;
         } catch (Exception e) {
@@ -46,6 +58,7 @@ public class TransactionExecutorService<T> {
         }
         try {
             transaction = session.beginTransaction();
+            System.out.println("transaction = " + transaction);
             action.accept(session);
             transaction.commit();
         } catch (Exception e) {

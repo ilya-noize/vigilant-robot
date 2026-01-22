@@ -2,8 +2,6 @@ package ru.shummi.listener;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.shummi.exception.ApplicationException;
@@ -21,13 +19,11 @@ public class ConsoleListener {
 
     private final IOHandler ioHandler;
     private final Map<OperationType, OperationHandler> handlers;
-    private final SessionFactory sessionFactory;
 
     @Autowired
     public ConsoleListener(
             IOHandler ioHandler,
-            List<OperationHandler> operations,
-            SessionFactory sessionFactory
+            List<OperationHandler> operations
     ) {
         this.ioHandler = ioHandler;
         this.handlers = operations.stream()
@@ -35,7 +31,6 @@ public class ConsoleListener {
                         OperationHandler::getType,
                         operation -> operation
                 ));
-        this.sessionFactory = sessionFactory;
     }
 
     @PostConstruct
@@ -61,7 +56,7 @@ public class ConsoleListener {
         System.out.println("├" + "─".repeat(width - 2) + "┐");
         System.out.println("│        MAIN MENU         │");
         for (OperationType type : OperationType.values()) {
-            // "├─ %-Ns│%n" -> N = width - 5
+            // "├─ %-Ns│%n" -> N = width - 6
             System.out.printf("├─ %-24s│%n", type);
         }
         System.out.println("├" + "─".repeat(width - 2) + "┘");
@@ -69,9 +64,6 @@ public class ConsoleListener {
 
     private void mainHandler() {
         try {
-            Session session = sessionFactory.getCurrentSession();
-            if (session == null)
-                sessionFactory.openSession();
             commandProcessing();
         } catch (NumberFormatException ignored) {
             System.out.println("│  ❌ Must be numeric symbols.");
@@ -83,10 +75,10 @@ public class ConsoleListener {
             System.out.printf("│  ❌ Illegal State: %s%n", e.getMessage());
         } catch (NoSuchElementException e) {
             System.out.printf("│  ❌ No Such: %s%n", e.getMessage());
+        } catch (Exception e) {
+            System.out.printf("│  ❌ Exception: %s.%n", e.getMessage());
         } catch (Throwable e) {
             System.out.printf("│  ❌ Throwable: %s.%n", e.getMessage());
-        } finally {
-            sessionFactory.getCurrentSession().close();
         }
     }
 
