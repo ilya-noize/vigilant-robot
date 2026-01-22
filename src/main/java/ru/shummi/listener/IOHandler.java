@@ -25,15 +25,6 @@ public class IOHandler {
         return input;
     }
 
-    public int getInteger(String message) {
-        String string = getString(message);
-        try {
-            return Integer.parseInt(string);
-        } catch (NumberFormatException e) {
-            throw new NumberFormatException();
-        }
-    }
-
     public long getLong(String message) {
         String string = getString(message);
         try {
