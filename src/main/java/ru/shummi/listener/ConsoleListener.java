@@ -8,9 +8,10 @@ import ru.shummi.exception.ApplicationException;
 import ru.shummi.operation.OperationHandler;
 import ru.shummi.operation.OperationType;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Component
@@ -69,17 +70,18 @@ public class ConsoleListener {
             System.out.println("│  ❌ Must be numeric symbols.");
         } catch (ApplicationException e) {
             System.out.printf("│  ❌ Application: %s%n", e.getMessage());
-        } catch (IllegalArgumentException e) {
-            System.out.printf("│  ❌ Illegal Argument: %s%n", e.getMessage());
-        } catch (IllegalStateException e) {
-            System.out.printf("│  ❌ Illegal State: %s%n", e.getMessage());
-        } catch (NoSuchElementException e) {
-            System.out.printf("│  ❌ No Such: %s%n", e.getMessage());
-        } catch (Exception e) {
-            System.out.printf("│  ❌ Exception: %s.%n", e.getMessage());
         } catch (Throwable e) {
-            System.out.printf("│  ❌ Throwable: %s.%n", e.getMessage());
+            getStackTrace(e);
         }
+    }
+
+    private void getStackTrace(Throwable e) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        String stackTrace = sw.toString().replace(", ", "\n");
+
+        System.out.printf("│  ❌ %s.%n", stackTrace);
     }
 
     private void commandProcessing() {
@@ -87,4 +89,6 @@ public class ConsoleListener {
         OperationType operationType = OperationType.valueOf(input.toUpperCase());
         System.out.printf("│  ✅ %s%n", handlers.get(operationType).perform());
     }
+
+
 }
