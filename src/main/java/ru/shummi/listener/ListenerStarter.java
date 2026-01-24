@@ -20,7 +20,6 @@ public class ListenerStarter {
 
     @PostConstruct
     public void init() {
-        sessionFactory.openSession();
         this.listener = new Thread(consoleListener::update);
         this.listener.start();
     }
