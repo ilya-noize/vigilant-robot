@@ -230,13 +230,13 @@ public class UserAccountServiceImpl implements UserAccountService {
                 .createQuery(selectUserAccountResourcesByAccountId, Object[].class)
                 .setParameter("accountId", accountId)
                 .getResultList();
-        User sourceUser = null;
-        Account sourceAccount = null;
+        User user = null;
+        Account account = null;
         for (Object[] row : sourceResources) {
-            sourceUser = (User) row[0];
-            sourceAccount = (Account) row[1];
+            user = (User) row[0];
+            account = (Account) row[1];
         }
-        return new AccountResources(sourceAccount, sourceUser);
+        return new AccountResources(account, user);
     }
 
     private record AccountResources(Account account, User user) {
@@ -244,7 +244,6 @@ public class UserAccountServiceImpl implements UserAccountService {
             return user.accounts();
         }
     }
-
     private void transferBetweenAccountWithCommission(
             Account sourceAccount,
             Account targetAccount,
