@@ -15,9 +15,7 @@ import java.util.StringJoiner;
 
 @Entity
 @Table(name = "accounts")
-public class Account /*extends BaseEntity*/ {
-    public static final Long ADMIN_ID = 1L;
-
+public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -79,8 +77,10 @@ public class Account /*extends BaseEntity*/ {
     }
 
     @Override
-    public boolean equals(Object o) {
-        return !super.equals(o) || o instanceof Account account;
+    public final boolean equals(Object o) {
+        if (!(o instanceof Account account)) return false;
+
+        return id.equals(account.id) && user.equals(account.user);
     }
 
     @Override

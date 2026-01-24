@@ -58,7 +58,6 @@ public class TransactionExecutorService {
         }
         try {
             transaction = session.beginTransaction();
-            System.out.println("transaction = " + transaction);
             action.accept(session);
             transaction.commit();
         } catch (Exception e) {

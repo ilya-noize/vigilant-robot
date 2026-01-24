@@ -25,21 +25,12 @@ public class HibernateConfiguration {
 
         configuration
                 // 2 first launch, debug, develop
-                //.setProperty("hibernate.hbm2ddl.auto", "create-drop");
-                //.setProperty("hibernate.format_sql", "true")
-                //.setProperty("hibernate.use_sql_comments", "true")
-
-                // 2 production only
-                .setProperty("hibernate.hbm2ddl.auto", "update");
-
-        configuration
-                // 2 first launch, debug, develop
-//                .setProperty("hibernate.hbm2ddl.auto", "create-drop");
+                .setProperty("hibernate.hbm2ddl.auto", "create-drop");
 //                .setProperty("hibernate.format_sql", "true")
 //                .setProperty("hibernate.use_sql_comments", "true")
 
                 // 2 production only
-                .setProperty("hibernate.hbm2ddl.auto", "update");
+//                .setProperty("hibernate.hbm2ddl.auto", "update");
 
         return configuration.buildSessionFactory();
     }

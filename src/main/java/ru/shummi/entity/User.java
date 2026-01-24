@@ -43,7 +43,7 @@ public class User {
             mappedBy = "user",
             fetch = FetchType.EAGER
     )
-    private List<Account> accounts = new ArrayList<>();
+    private final List<Account> accounts = new ArrayList<>();
 
     public User() {
     }
