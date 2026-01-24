@@ -1,7 +1,7 @@
 package ru.shummi.service;
 
-import ru.shummi.model.Account;
+import ru.shummi.entity.Account;
 
-public interface AccountService extends CrudService<Account> {
-    Account create(int userId);
+public interface AccountService {
+    Account create(Account account);
 }

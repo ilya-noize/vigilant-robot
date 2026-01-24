@@ -30,12 +30,12 @@ public class AccountWithdrawHandler implements OperationHandler {
 
     @Override
     public String perform() {
-        int accountId = ioHandler.getInteger("Enter account ID to withdraw from");
+        long accountId = ioHandler.getLong("Enter account ID to withdraw from");
         String amount = ioHandler.getString("Enter amount to withdraw");
         BigDecimal money = new BigDecimal(amount);
-        userAccountService.withdrawAccount(accountId, money);
+        userAccountService.withdrawAccountById(accountId, money);
 
-        return "Amount %s deposited to account ID: %s"
+        return "Amount of %s has been withdrawn from the account ID: %s"
                 .formatted(amount, accountId);
     }
 }

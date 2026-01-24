@@ -30,10 +30,10 @@ public class AccountDepositHandler implements OperationHandler {
 
     @Override
     public String perform() {
-        int accountId = ioHandler.getInteger("Enter account ID");
+        long accountId = ioHandler.getLong("Enter account ID");
         String amount = ioHandler.getString("Enter amount to deposit");
         BigDecimal deposit = new BigDecimal(amount);
-        userAccountService.depositAccountOnAmount(accountId, deposit);
+        userAccountService.depositAccountById(accountId, deposit);
 
         return "Amount %s updated to account ID: %s"
                 .formatted(amount, accountId);

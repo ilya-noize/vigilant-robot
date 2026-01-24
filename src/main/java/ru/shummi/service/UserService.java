@@ -1,14 +1,12 @@
 package ru.shummi.service;
 
-import ru.shummi.model.User;
+import ru.shummi.entity.User;
 
-import java.util.Collection;
+import java.util.List;
 
-public interface UserService extends CrudService<User> {
+public interface UserService {
     User create(String login);
 
-    Collection<User> getAll();
-
-    boolean isEmpty();
+    List<User> getAll();
 }
 

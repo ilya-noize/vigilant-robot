@@ -8,16 +8,18 @@ import ru.shummi.exception.ApplicationException;
 import ru.shummi.operation.OperationHandler;
 import ru.shummi.operation.OperationType;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Component
 public class ConsoleListener {
+    private final int width = 28;
+
     private final IOHandler ioHandler;
     private final Map<OperationType, OperationHandler> handlers;
-    private final int width = 28;
 
     @Autowired
     public ConsoleListener(
@@ -55,7 +57,7 @@ public class ConsoleListener {
         System.out.println("├" + "─".repeat(width - 2) + "┐");
         System.out.println("│        MAIN MENU         │");
         for (OperationType type : OperationType.values()) {
-            // "├─ %-Ns│%n" -> N = width - 5
+            // "├─ %-Ns│%n" -> N = width - 6
             System.out.printf("├─ %-24s│%n", type);
         }
         System.out.println("├" + "─".repeat(width - 2) + "┘");
@@ -66,14 +68,20 @@ public class ConsoleListener {
             commandProcessing();
         } catch (NumberFormatException ignored) {
             System.out.println("│  ❌ Must be numeric symbols.");
-        } catch (ApplicationException |
-                 IllegalArgumentException |
-                 IllegalStateException |
-                 NoSuchElementException e) {
-            System.out.printf("│  ❌ %s%n", e.getMessage());
+        } catch (ApplicationException e) {
+            System.out.printf("│  ❌ Application: %s%n", e.getMessage());
         } catch (Throwable e) {
-            System.out.printf("│  ❌ Command fail: %s.%n", e.getMessage());
+            getStackTrace(e);
         }
+    }
+
+    private void getStackTrace(Throwable e) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        String stackTrace = sw.toString().replace(", ", "\n");
+
+        System.out.printf("│  ❌ %s.%n", stackTrace);
     }
 
     private void commandProcessing() {
@@ -81,4 +89,6 @@ public class ConsoleListener {
         OperationType operationType = OperationType.valueOf(input.toUpperCase());
         System.out.printf("│  ✅ %s%n", handlers.get(operationType).perform());
     }
+
+
 }
