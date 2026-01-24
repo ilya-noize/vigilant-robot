@@ -110,9 +110,9 @@ public class UserAccountServiceImpl implements UserAccountService {
      *
      * @throws ApplicationException             если удаляется счёт администратора
      * @throws ApplicationException             если удаляется единственный счёт
-     * @throws java.util.NoSuchElementException если счёт не найден
-     * @throws java.util.NoSuchElementException если другой счёт не найден
-     * @throws java.util.NoSuchElementException если пользователь не найден
+     * @throws java.lang.NullPointerException если счёт не найден
+     * @throws java.lang.NullPointerException если другой счёт не найден
+     * @throws java.lang.NullPointerException если пользователь не найден
      */
     public void closeAccountById(Long accountId) {
         isNotSystemResources(accountId);
@@ -143,8 +143,8 @@ public class UserAccountServiceImpl implements UserAccountService {
      * @param accountId номер счёта
      * @param withdraw  сумма
      * @throws ApplicationException             Amount must be positive
-     * @throws java.util.NoSuchElementException если счёт не найден
-     * @throws java.util.NoSuchElementException если пользователь не найден
+     * @throws java.lang.NullPointerException если счёт не найден
+     * @throws java.lang.NullPointerException если пользователь не найден
      */
     public void withdrawAccountById(Long accountId, BigDecimal withdraw) {
         isPositiveAmount(withdraw);
@@ -161,8 +161,8 @@ public class UserAccountServiceImpl implements UserAccountService {
      * @param accountId номер счёта
      * @param deposit   сумма
      * @throws ApplicationException             Amount must be positive
-     * @throws java.util.NoSuchElementException если счёт не найден
-     * @throws java.util.NoSuchElementException если пользователь не найден
+     * @throws java.lang.NullPointerException если счёт не найден
+     * @throws java.lang.NullPointerException если пользователь не найден
      */
     public void depositAccountById(Long accountId, BigDecimal deposit) {
         isPositiveAmount(deposit);
@@ -181,8 +181,8 @@ public class UserAccountServiceImpl implements UserAccountService {
      * @param targetAccountId номер счёта внесения
      * @param transfer        сумма списания/внесения
      * @throws ApplicationException             Amount must be positive
-     * @throws java.util.NoSuchElementException если счёт не найден
-     * @throws java.util.NoSuchElementException если пользователь не найден
+     * @throws java.lang.NullPointerException если счёт не найден
+     * @throws java.lang.NullPointerException если пользователь не найден
      */
     public void transferAccountFromIdToId(
             Long sourceAccountId,
